@@ -14,6 +14,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -49,6 +50,15 @@ public class IndexDataController {
   ) {
     IndexDataDto dto = indexDataService.update(id, request);
     return ResponseEntity.status(HttpStatus.OK).body(dto);
+  }
+
+  @DeleteMapping("/{id}")
+  @Operation(summary = "지수 데이터 삭제")
+  public ResponseEntity<?> delete(
+      @PathVariable Long id
+  ) {
+    indexDataService.delete(id);
+    return ResponseEntity.noContent().build();
   }
 
   @GetMapping(value = "/performance/favorite")
