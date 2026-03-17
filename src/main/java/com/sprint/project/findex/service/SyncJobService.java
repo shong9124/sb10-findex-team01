@@ -3,17 +3,13 @@ package com.sprint.project.findex.service;
 import com.sprint.project.findex.dto.SyncJobDto;
 import com.sprint.project.findex.dto.openapi.StockMarketIndexResponse;
 import com.sprint.project.findex.dto.openapi.StockMarketIndexResponse.StockIndexDto;
-import com.sprint.project.findex.entity.DeletedStatus;
 import com.sprint.project.findex.entity.IndexInfo;
-import com.sprint.project.findex.entity.SourceType;
 import com.sprint.project.findex.entity.SyncJob;
-import com.sprint.project.findex.global.entity.JobType;
-import com.sprint.project.findex.global.entity.ResultType;
 import com.sprint.project.findex.global.exception.BusinessLogicException;
 import com.sprint.project.findex.global.exception.ExceptionCode;
 import com.sprint.project.findex.mapper.SyncJobMapper;
 import com.sprint.project.findex.repository.IndexInfoRepository;
-import com.sprint.project.findex.repository.SyncJobRepository;
+import com.sprint.project.findex.service.openapi.internal.PersistentWorker;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.DayOfWeek;
 import java.time.Duration;
@@ -27,26 +23,24 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class SyncJobService {
 
   private final IndexInfoRepository indexInfoRepository;
-  private final SyncJobRepository syncJobRepository;
+  private final SyncJobMapper syncJobMapper;
+  private final PersistentWorker worker;
 
   @Qualifier("openapi")
   private final WebClient openapi;
-  private final SyncJobMapper syncJobMapper;
 
 
   // 가장 최신의 지수 정보를 로드해 저장합니다.
   public List<SyncJobDto> syncIndexInfos(HttpServletRequest request) {
 
-    List<SyncJob> syncJobList = new ArrayList<>(); // response
+    List<SyncJob> response = new ArrayList<>();
     String requestIpAddr = request.getRemoteAddr();
     LocalDate baseDate = getLastWeekday();
 
@@ -68,17 +62,15 @@ public class SyncJobService {
         break;
       }
 
-      // 지수 정보 갱신 및 연동 기록 생성
-      syncJobList.addAll(
-          updateIndexInfo(stockIndexDtoList, indexInfoMap, requestIpAddr)
+      // worker 이용하여 IndexInfo와 SyncJob를 한 트랜잭션 내에서 함께 저장
+      response.addAll(
+          worker.saveIndexInfoAndSyncJob(stockIndexDtoList, indexInfoMap, requestIpAddr)
       );
 
       pageNo++;
     }
 
-    syncJobRepository.saveAll(syncJobList);
-
-    return syncJobList.stream()
+    return response.stream()
         .map(syncJobMapper::toDto)
         .toList();
   }
@@ -117,43 +109,6 @@ public class SyncJobService {
     }
 
     return response.response().body().items().item();
-  }
-
-  private List<SyncJob> updateIndexInfo(List<StockIndexDto> stockIndexDtoList,
-      Map<String, IndexInfo> indexInfoMap, String requestIpAddr) {
-    List<SyncJob> syncJobList = new ArrayList<>();
-
-    for (StockIndexDto stockIndexDto : stockIndexDtoList) {
-      String key = stockIndexDto.indexClassification() + "_" + stockIndexDto.indexName();
-
-      IndexInfo indexInfo = indexInfoMap.get(key);
-
-      if (indexInfo != null) {
-        indexInfo.updateByOpenAPI(stockIndexDto);
-      } else {
-        // insert
-        indexInfo = indexInfoRepository.save(
-            IndexInfo.builder()
-                .indexClassification(stockIndexDto.indexClassification())
-                .indexName(stockIndexDto.indexName())
-                .employedItemsCount(stockIndexDto.employedItemsCount())
-                .basePointInTime(stockIndexDto.basePointInTime())
-                .baseIndex(stockIndexDto.baseIndex())
-                .sourceType(SourceType.OPEN_API)
-                .favorite(false)
-                .isDeleted(DeletedStatus.ACTIVE)
-                .build()
-        );
-        indexInfoMap.put(key, indexInfo);
-      }
-
-      // 연동 기록 생성
-      syncJobList.add(
-          new SyncJob(indexInfo, JobType.INDEX_INFO, null, requestIpAddr, ResultType.SUCCESS)
-      );
-    }
-
-    return syncJobList;
   }
 
   // 오늘 이전의 가장 마지막 평일 구하기
