@@ -1,4 +1,4 @@
-package com.sprint.project.findex.exception;
+package com.sprint.project.findex.global.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,6 +14,7 @@ public enum ErrorCode {
   FILE_CANT_WRITE(500, "파일 저장에 실패했습니다."),
   EXTERNAL_API_ERROR(500, "외부 API 호출에 실패했습니다."),
   DATABASE_ERROR(500, "데이터베이스 처리 중 오류가 발생했습니다."),
+  OPEN_API_REQUEST_FAILED(500, "Open API 데이터 요청에 실패하였습니다.(%s)"),
 
   // =========================
   // 400 BAD REQUEST

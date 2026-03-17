@@ -8,6 +8,8 @@ import com.sprint.project.findex.dto.dashboard.RankingRequest;
 import com.sprint.project.findex.entity.DeletedStatus;
 import com.sprint.project.findex.dto.dashboard.IndexPerformanceDto;
 import com.sprint.project.findex.entity.IndexInfo;
+import com.sprint.project.findex.global.exception.ApiException;
+import com.sprint.project.findex.global.exception.ErrorCode;
 import com.sprint.project.findex.mapper.DashboardMapper;
 import com.sprint.project.findex.repository.DashboardRepository;
 import com.sprint.project.findex.repository.IndexInfoRepository;
@@ -16,7 +18,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.sql.Date;
 import java.util.List;
-import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,7 +75,7 @@ public class DashboardService {
   public IndexChartDto findIndexChart(Long indexInfoId, String periodType) {
 
     IndexInfo index = indexInfoRepository.findById(indexInfoId)
-        .orElseThrow(() -> new NoSuchElementException("해당 id에 지수 정보가 존재하지 않습니다."));
+        .orElseThrow(() -> new ApiException(ErrorCode.INDEX_INFO_ID_NOT_FOUND, indexInfoId));
 
     List<Object[]> rows = dashboardRepository.findIndexChartData(
         indexInfoId,
@@ -125,7 +126,7 @@ public class DashboardService {
       case "DAILY" -> currentDate.minusDays(1);
       case "WEEKLY" -> currentDate.minusWeeks(1);
       case "MONTHLY" -> currentDate.minusMonths(1);
-      default -> throw new IllegalArgumentException("잘못된 periodType 입니다.");
+      default -> throw new ApiException(ErrorCode.INVALID_PERIOD_TYPE, periodType);
     };
   }
 }

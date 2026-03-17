@@ -1,4 +1,4 @@
-package com.sprint.project.findex.exception;
+package com.sprint.project.findex.global.exception;
 
 import lombok.Getter;
 
