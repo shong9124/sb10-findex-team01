@@ -1,8 +1,10 @@
 package com.sprint.project.findex.service;
 
-import com.sprint.project.findex.dto.IndexDataCreateRequest;
-import com.sprint.project.findex.dto.IndexDataDto;
-import com.sprint.project.findex.dto.IndexDataUpdateRequest;
+import com.sprint.project.findex.dto.indexdata.CursorPageIndexDataRequest;
+import com.sprint.project.findex.dto.indexdata.CursorPageResponseIndexDataDto;
+import com.sprint.project.findex.dto.indexdata.IndexDataCreateRequest;
+import com.sprint.project.findex.dto.indexdata.IndexDataDto;
+import com.sprint.project.findex.dto.indexdata.IndexDataUpdateRequest;
 import com.sprint.project.findex.entity.DeletedStatus;
 import com.sprint.project.findex.entity.IndexData;
 import com.sprint.project.findex.entity.IndexInfo;
@@ -10,8 +12,10 @@ import com.sprint.project.findex.entity.SourceType;
 import com.sprint.project.findex.mapper.IndexDataMapper;
 import com.sprint.project.findex.repository.IndexDataRepository;
 import com.sprint.project.findex.repository.IndexInfoRepository;
+import java.util.List;
 import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,6 +81,34 @@ public class IndexDataService {
     indexData.updateIsDeleted(DeletedStatus.DELETED);
   }
 
+  public CursorPageResponseIndexDataDto findAll(CursorPageIndexDataRequest request) {
+    Slice<IndexData> slice = indexDataRepository.findCursorPage(request);
+    List<IndexData> content = slice.getContent();
+
+    String nextCursor = null;
+    Long nextIdAfter = null;
+    boolean hasNext = slice.hasNext();
+
+    if (!content.isEmpty()) {
+      IndexData lastValue = content.get(content.size() - 1);
+      nextCursor = mapCursorToString(lastValue, request.sortField());
+      nextIdAfter = lastValue.getId();
+    }
+
+    List<IndexDataDto> indexDataDtoList = content.stream()
+        .map(indexDataMapper::toDto)
+        .toList();
+
+    return new CursorPageResponseIndexDataDto(
+        indexDataDtoList,
+        nextCursor,
+        nextIdAfter,
+        indexDataDtoList.size(),
+        0L,
+        hasNext
+    );
+  }
+
   private void validateDuplicateData(IndexDataCreateRequest request, IndexInfo indexInfo) {
     boolean exists = indexDataRepository.existsByIndexInfoAndBaseDateAndIsDeleted(indexInfo,
         request.baseDate(), DeletedStatus.ACTIVE);
@@ -85,4 +117,18 @@ public class IndexDataService {
     }
   }
 
+  private String mapCursorToString(IndexData lastValue, String sortField) {
+    return switch (sortField) {
+      case "marketPrice" -> String.valueOf(lastValue.getMarketPrice());
+      case "closingPrice" -> String.valueOf(lastValue.getClosingPrice());
+      case "highPrice" -> String.valueOf(lastValue.getHighPrice());
+      case "lowPrice" -> String.valueOf(lastValue.getLowPrice());
+      case "versus" -> String.valueOf(lastValue.getVersus());
+      case "fluctuationRate" -> String.valueOf(lastValue.getFluctuationRate());
+      case "tradingQuantity" -> String.valueOf(lastValue.getTradingQuantity());
+      case "tradingPrice" -> String.valueOf(lastValue.getTradingPrice());
+      case "marketTotalAmount" -> String.valueOf(lastValue.getMarketTotalAmount());
+      default -> String.valueOf(lastValue.getBaseDate());
+    };
+  }
 }

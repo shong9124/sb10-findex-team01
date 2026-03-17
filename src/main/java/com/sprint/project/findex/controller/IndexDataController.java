@@ -1,8 +1,10 @@
 package com.sprint.project.findex.controller;
 
-import com.sprint.project.findex.dto.IndexDataCreateRequest;
-import com.sprint.project.findex.dto.IndexDataDto;
-import com.sprint.project.findex.dto.IndexDataUpdateRequest;
+import com.sprint.project.findex.dto.indexdata.CursorPageIndexDataRequest;
+import com.sprint.project.findex.dto.indexdata.CursorPageResponseIndexDataDto;
+import com.sprint.project.findex.dto.indexdata.IndexDataCreateRequest;
+import com.sprint.project.findex.dto.indexdata.IndexDataDto;
+import com.sprint.project.findex.dto.indexdata.IndexDataUpdateRequest;
 import com.sprint.project.findex.dto.dashboard.IndexPerformanceDto;
 import com.sprint.project.findex.service.DashboardService;
 import com.sprint.project.findex.service.IndexDataService;
@@ -15,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,6 +61,15 @@ public class IndexDataController {
   ) {
     indexDataService.delete(id);
     return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping
+  @Operation(summary = "지수 데이터 목록 조회")
+  public ResponseEntity<CursorPageResponseIndexDataDto> findAll(
+      @ModelAttribute CursorPageIndexDataRequest request
+  ) {
+    CursorPageResponseIndexDataDto dto = indexDataService.findAll(request);
+    return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 
   @GetMapping(value = "/performance/favorite")
