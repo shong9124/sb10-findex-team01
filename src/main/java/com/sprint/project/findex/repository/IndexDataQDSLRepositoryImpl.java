@@ -10,6 +10,7 @@ import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sprint.project.findex.dto.SortDirection;
 import com.sprint.project.findex.dto.indexdata.CursorPageIndexDataRequest;
+import com.sprint.project.findex.dto.indexdata.IndexDataCsvExportRequest;
 import com.sprint.project.findex.dto.indexdata.IndexDataSortField;
 import com.sprint.project.findex.entity.DeletedStatus;
 import com.sprint.project.findex.entity.IndexData;
@@ -32,7 +33,7 @@ public class IndexDataQDSLRepositoryImpl implements IndexDataQDSLRepository {
         .where(
             indexData.isDeleted.eq(DeletedStatus.ACTIVE),
             eqIndexInfoId(request.indexInfoId()),
-            betweenDates(request.startTime(), request.endDate()),
+            betweenDates(request.startDate(), request.endDate()),
             cursorOrNull(request)
         )
         .orderBy(
@@ -51,6 +52,19 @@ public class IndexDataQDSLRepositoryImpl implements IndexDataQDSLRepository {
   }
 
   @Override
+  public List<IndexData> findAllForExport(IndexDataCsvExportRequest request) {
+    return queryFactory
+        .selectFrom(indexData)
+        .where(
+            indexData.isDeleted.eq(DeletedStatus.ACTIVE),
+            eqIndexInfoId(request.indexInfoId()),
+            betweenDates(request.startDate(), request.endDate())
+        )
+        .orderBy(getOrderSpecifier(request.sortField(), request.sortDirection()))
+        .fetch();
+  }
+
+  @Override
   public Long countByRequest(CursorPageIndexDataRequest request) {
     return queryFactory.
         select(indexData.count())
@@ -58,7 +72,7 @@ public class IndexDataQDSLRepositoryImpl implements IndexDataQDSLRepository {
         .where(
             indexData.isDeleted.eq(DeletedStatus.ACTIVE),
             eqIndexInfoId(request.indexInfoId()),
-            betweenDates(request.startTime(), request.endDate())
+            betweenDates(request.startDate(), request.endDate())
         )
         .fetchOne();
   }
