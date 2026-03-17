@@ -1,16 +1,17 @@
 package com.sprint.project.findex.service;
 
-import com.sprint.project.findex.dto.SyncJobDto;
 import com.sprint.project.findex.dto.openapi.StockMarketIndexRequest;
 import com.sprint.project.findex.dto.openapi.StockMarketIndexResponse;
 import com.sprint.project.findex.dto.openapi.StockMarketIndexResponse.StockIndexDto;
+import com.sprint.project.findex.dto.syncjob.CursorPageResponseSyncJobDto;
 import com.sprint.project.findex.dto.syncjob.IndexDataSyncRequest;
+import com.sprint.project.findex.dto.syncjob.SyncJobDto;
+import com.sprint.project.findex.dto.syncjob.SyncJobRequestQuery;
 import com.sprint.project.findex.entity.IndexInfo;
 import com.sprint.project.findex.entity.SyncJob;
-import com.sprint.project.findex.global.exception.ApiException;
-import com.sprint.project.findex.global.exception.ErrorCode;
 import com.sprint.project.findex.mapper.SyncJobMapper;
 import com.sprint.project.findex.repository.IndexInfoRepository;
+import com.sprint.project.findex.repository.SyncJobRepository;
 import com.sprint.project.findex.service.openapi.internal.PersistentWorker;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.DayOfWeek;
@@ -23,6 +24,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,8 +32,8 @@ public class SyncJobService {
 
   private final IndexSyncService indexSyncService;
   private final IndexInfoRepository indexInfoRepository;
+  private final SyncJobRepository syncJobRepository;
   private final SyncJobMapper syncJobMapper;
-
   private final PersistentWorker worker;
 
 
@@ -99,6 +101,49 @@ public class SyncJobService {
     return response.stream()
         .map(syncJobMapper::toDto)
         .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public CursorPageResponseSyncJobDto findSyncJobs(SyncJobRequestQuery query) {
+    List<SyncJob> syncJobs = syncJobRepository.search(query);
+
+    // 다음 페이지 유무 확인
+    boolean hasNext = syncJobs.size() > query.size();
+    List<SyncJob> pagedSyncJobs = hasNext
+        ? syncJobs.subList(0, query.size())
+        : syncJobs;
+
+    // 마지막 요소 ID와 cursor 설정
+    Long nextIdAfter = null;
+    String nextCursor = null;
+
+    if (!pagedSyncJobs.isEmpty()) {
+      SyncJob lastItem = pagedSyncJobs.get(pagedSyncJobs.size() - 1);
+
+      if (hasNext) {
+        nextIdAfter = lastItem.getId();
+        nextCursor = "jobTime".equals(query.sortField())
+            ? lastItem.getJobTime().toString()
+            : lastItem.getTargetDate().toString();
+      }
+    }
+
+    // 연동 작업 전체 카운트
+    long totalElements = syncJobRepository.countWithFilter(query);
+
+    // 응답 콘텐츠 변환(엔티티 -> dto)
+    List<SyncJobDto> content = pagedSyncJobs.stream()
+        .map(syncJobMapper::toDto)
+        .toList();
+
+    return CursorPageResponseSyncJobDto.builder()
+        .content(content)
+        .nextCursor(nextCursor)
+        .nextIdAfter(nextIdAfter)
+        .size(content.size())
+        .totalElements(totalElements)
+        .hasNext(hasNext)
+        .build();
   }
 
 
