@@ -1,9 +1,9 @@
-package com.sprint.project.findex.dto;
+package com.sprint.project.findex.dto.syncjob;
 
 import com.sprint.project.findex.global.entity.JobType;
 import com.sprint.project.findex.global.entity.ResultType;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +18,6 @@ public class SyncJobDto {
   private Long indexInfoId;
   private LocalDate targetDate;
   private String worker;
-  private Instant jobTime;
+  private LocalDateTime jobTime;
   private ResultType result;
 }

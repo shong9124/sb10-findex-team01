@@ -13,8 +13,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -53,7 +53,7 @@ public class SyncJob {
   // 작업일시
   @CreatedDate
   @Column(nullable = false)
-  private Instant jobTime;
+  private LocalDateTime jobTime;
 
   // 결과
   @Column(length = 10, nullable = false)
