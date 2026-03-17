@@ -4,6 +4,7 @@ import com.sprint.project.findex.dto.indexinfo.CursorPageResponseIndexInfoDto;
 import com.sprint.project.findex.dto.indexinfo.IndexInfoCreateRequest;
 import com.sprint.project.findex.dto.indexinfo.IndexInfoCursorPageRequest;
 import com.sprint.project.findex.dto.indexinfo.IndexInfoDto;
+import com.sprint.project.findex.dto.indexinfo.IndexInfoSummaryDto;
 import com.sprint.project.findex.dto.indexinfo.IndexInfoUpdateRequest;
 import com.sprint.project.findex.entity.IndexInfo;
 import com.sprint.project.findex.mapper.IndexInfoMapper;
@@ -53,22 +54,28 @@ public class IndexInfoService {
     return toCursorPageDto(results, request);
   }
 
-  private CursorPageResponseIndexInfoDto toCursorPageDto(List<IndexInfo> results,
+  @Transactional(readOnly = true)
+  public List<IndexInfoSummaryDto> findIndexInfoSummary() {
+    return indexInfoRepository.findDistinctClassificationsAndNames();
+  }
+
+  private CursorPageResponseIndexInfoDto toCursorPageDto(List<IndexInfo> indexInfos,
       IndexInfoCursorPageRequest request) {
+    List<IndexInfoDto> content = indexInfoMapper.toDtoList(indexInfos);
     String nextCursor = "";
     Long nextIdAfter = null;
-    int pageSize = request.size();
-    Long totalElements = indexInfoRepository.count();
+    int pageSize = request.getSize();
+    Long totalElements = indexInfoRepository.getTotalElements(request);
     boolean hasNext = false;
-    if (results.size() > pageSize) {
-      IndexInfo indexInfo = results.get(pageSize);
-      nextCursor = indexInfo.getIndexClassification();
-      nextIdAfter = indexInfo.getId();
-      results.remove(pageSize);
+    if (content.size() > pageSize) {
+      IndexInfoDto indexInfoDto = content.get(pageSize);
+      nextCursor = indexInfoDto.indexClassification();
+      nextIdAfter = indexInfoDto.id();
+      content.remove(pageSize);
       hasNext = true;
     }
     return CursorPageResponseIndexInfoDto.builder()
-        .content(results)
+        .content(content)
         .nextCursor(nextCursor)
         .nextIdAfter(nextIdAfter)
         .size(pageSize)

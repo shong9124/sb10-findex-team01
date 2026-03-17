@@ -17,7 +17,7 @@ public enum IndexInfoSortField {
   @JsonCreator
   public static IndexInfoSortField from(String value) {
     for (IndexInfoSortField sortField : IndexInfoSortField.values()) {
-      if (sortField.name.equals(value)) {
+      if (sortField.getName().equals(value)) {
         return sortField;
       }
     }

@@ -8,13 +8,13 @@ import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
+import lombok.Setter;
 
 @Getter
-@Accessors(fluent = true)
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class IndexInfoCursorPageRequest {
+public final class IndexInfoCursorPageRequest {
 
   private String indexClassification;
   private String indexName;

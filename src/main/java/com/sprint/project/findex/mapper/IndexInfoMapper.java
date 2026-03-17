@@ -5,6 +5,7 @@ import com.sprint.project.findex.dto.indexinfo.IndexInfoDto;
 import com.sprint.project.findex.dto.openapi.StockMarketIndexResponse.StockIndexDto;
 import com.sprint.project.findex.entity.IndexInfo;
 import com.sprint.project.findex.mapper.config.GlobalMapperConfig;
+import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -12,6 +13,8 @@ import org.mapstruct.Mapping;
 public interface IndexInfoMapper extends BaseMapper<IndexInfo> {
 
   IndexInfoDto toDto(IndexInfo indexInfo);
+
+  List<IndexInfoDto> toDtoList(List<IndexInfo> indexInfos);
 
   IndexInfo toEntity(IndexInfoCreateRequest request);
 

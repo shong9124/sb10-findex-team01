@@ -8,12 +8,15 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "index_infos")
 public class IndexInfo extends BaseEntity {
@@ -33,36 +36,18 @@ public class IndexInfo extends BaseEntity {
   @Column(nullable = false)
   private Double baseIndex;
 
+  @Builder.Default
   @Column(nullable = false)
   @Enumerated(value = EnumType.STRING)
-  private SourceType sourceType;
+  private SourceType sourceType = SourceType.USER;
 
   @Column
   private boolean favorite;
 
+  @Builder.Default
   @Column(nullable = false)
   @Enumerated(value = EnumType.STRING)
-  private DeletedStatus isDeleted;
-
-  @Builder
-  public IndexInfo(
-      String indexClassification,
-      String indexName,
-      Integer employedItemsCount,
-      LocalDate basePointInTime,
-      Double baseIndex,
-      SourceType sourceType,
-      boolean favorite,
-      DeletedStatus isDeleted) {
-    this.indexClassification = indexClassification;
-    this.indexName = indexName;
-    this.employedItemsCount = employedItemsCount;
-    this.basePointInTime = basePointInTime;
-    this.baseIndex = baseIndex;
-    this.sourceType = sourceType;
-    this.favorite = favorite;
-    this.isDeleted = isDeleted;
-  }
+  private DeletedStatus isDeleted = DeletedStatus.ACTIVE;
 
   public void update(IndexInfoUpdateRequest request) {
     updateIfChanged(employedItemsCount, request.employedItemsCount(),

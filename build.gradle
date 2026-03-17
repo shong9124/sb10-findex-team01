@@ -54,24 +54,6 @@ dependencies {
   testImplementation('org.springframework.boot:spring-boot-starter-test')
 }
 
-def querydslDir = layout.buildDirectory.dir("generated/querydsl").get().asFile
-
-sourceSets {
-  main.java.srcDirs += [querydslDir]
-}
-
-tasks.withType(JavaCompile).configureEach {
-  options.getGeneratedSourceOutputDirectory().set(querydslDir)
-}
-
-clean {
-  delete file(querydslDir)
-}
-
-jar {
-  enabled = false
-}
-
 test {
   useJUnitPlatform()
 }
