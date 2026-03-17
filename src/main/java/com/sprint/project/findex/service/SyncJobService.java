@@ -51,20 +51,8 @@ public class SyncJobService {
       ResultType resultType = ResultType.FAIL;
 
       try {
-        // todo: 아래의 WebClient 코드는 임의로 작성함. 나중에 분리 및 교체할 예정.
-        StockMarketIndexAPIResponse apiResponse = webClient.get()
-            .uri(urlBuilder -> urlBuilder
-                .queryParam("serviceKey", apiKey)
-                .queryParam("resultType", "json")
-                .queryParam("idxNm", indexInfo.getIndexName())
-                .queryParam("beginEpyItmsCnt", indexInfo.getEmployedItemsCount())
-                .queryParam("basDt",
-                    indexInfo.getBasePointInTime().format(DateTimeFormatter.ofPattern("yyyyMMdd")))
-                .build()
-            )
-            .retrieve() // response body를 추출
-            .bodyToMono(StockMarketIndexAPIResponse.class)
-            .block(Duration.ofSeconds(5));
+        // todo: 아래의 WebClient 코드는 임의로 작성함. 나중에 교체할 예정.
+        StockMarketIndexAPIResponse apiResponse = getOpenApiIndexInfo(indexInfo);
 
         // 지수 데이터 갱신
         if (apiResponse.response().header().resultCode().equals("00")
@@ -86,5 +74,21 @@ public class SyncJobService {
     }
 
     return syncJobDtos;
+  }
+
+  private StockMarketIndexAPIResponse getOpenApiIndexInfo(IndexInfo indexInfo) {
+    return webClient.get()
+        .uri(urlBuilder -> urlBuilder
+            .queryParam("serviceKey", apiKey)
+            .queryParam("resultType", "json")
+            .queryParam("idxNm", indexInfo.getIndexName())
+            .queryParam("beginEpyItmsCnt", indexInfo.getEmployedItemsCount())
+            .queryParam("basDt",
+                indexInfo.getBasePointInTime().format(DateTimeFormatter.ofPattern("yyyyMMdd")))
+            .build()
+        )
+        .retrieve()
+        .bodyToMono(StockMarketIndexAPIResponse.class)
+        .block(Duration.ofSeconds(5));
   }
 }
