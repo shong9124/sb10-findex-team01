@@ -7,6 +7,8 @@ import com.sprint.project.findex.dto.openapi.StockMarketIndexResponse.StockIndex
 import com.sprint.project.findex.dto.syncjob.IndexDataSyncRequest;
 import com.sprint.project.findex.entity.IndexInfo;
 import com.sprint.project.findex.entity.SyncJob;
+import com.sprint.project.findex.global.exception.ApiException;
+import com.sprint.project.findex.global.exception.ErrorCode;
 import com.sprint.project.findex.mapper.SyncJobMapper;
 import com.sprint.project.findex.repository.IndexInfoRepository;
 import com.sprint.project.findex.service.openapi.internal.PersistentWorker;
