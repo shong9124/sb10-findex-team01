@@ -34,7 +34,7 @@ public class DashboardService {
 
     LocalDate targetDate = calculateTargetDate(LocalDate.now(), periodType);
 
-    return dashboardRepository.findFavoriteIndexPerformance(targetDate, DeletedStatus.ACTIVE)
+    return dashboardRepository.findFavoriteIndexPerformance(targetDate)
         .stream()
         .map(DashboardMapper::toIndexPerformanceDto)
         .toList();
@@ -47,8 +47,8 @@ public class DashboardService {
 
     // indexInfoId값이 null이면 지수 전체 조회
     List<DashboardRankingProjection> projection = (request.indexInfoId() == null)
-        ? dashboardRepository.findAllIndexRanking(today, compareDate, DeletedStatus.ACTIVE.name())
-        : dashboardRepository.findIndexRankingByIndexInfoId(request.indexInfoId(), today, compareDate, DeletedStatus.ACTIVE.name());
+        ? dashboardRepository.findAllIndexRanking(today, compareDate)
+        : dashboardRepository.findIndexRankingByIndexInfoId(request.indexInfoId(), today, compareDate);
 
     List<DashboardQueryDto> queryResult = projection.stream()
         .map(DashboardMapper::toQueryDto)
@@ -77,11 +77,7 @@ public class DashboardService {
     IndexInfo index = indexInfoRepository.findById(indexInfoId)
         .orElseThrow(() -> new ApiException(ErrorCode.INDEX_INFO_ID_NOT_FOUND, indexInfoId));
 
-    List<Object[]> rows = dashboardRepository.findIndexChartData(
-        indexInfoId,
-        periodType,
-        DeletedStatus.ACTIVE.name()
-    );
+    List<Object[]> rows = dashboardRepository.findIndexChartData(indexInfoId, periodType);
 
     List<Items> dataPoints = new ArrayList<>();
     List<Items> ma5DataPoints = new ArrayList<>();
