@@ -14,9 +14,9 @@ public interface DashboardRepository extends JpaRepository<IndexData, Long> {
 
   // 쿼리문 안에서 IndexPerformanceDto를 바로 매핑하려니 계산하는 과정에서 타입 추론 오류발생
   // DashboardQueryDto로 우회해서 서비스에서 계산후 처리하는 방향으로 결정
-  // 기간 내 변화가 있었던 즐겨찾기 지수 조회
+  // targetDate 기준 가장 이른 baseDate를 기준으로 즐겨찾기 지수 조회
   // current = 최신 데이터
-  // before = period 시작일 이후 가장 이른 데이터
+  // before = targetDate 이하에서 가장 최근 데이터
   @Query("""
       select new com.sprint.project.findex.dto.dashboard.DashboardQueryDto(
           i.id,
@@ -39,17 +39,16 @@ public interface DashboardRepository extends JpaRepository<IndexData, Long> {
         on before.indexInfo.id = i.id
        and before.isDeleted = :deletedStatus
        and before.baseDate = (
-           select min(b.baseDate)
+           select max(b.baseDate)
            from IndexData b
            where b.indexInfo.id = i.id
-             and b.baseDate >= :targetDate
+             and b.baseDate <= :targetDate
              and b.isDeleted = :deletedStatus
        )
       where i.favorite = true
         and i.isDeleted = :deletedStatus
-        and current.closingPrice <> before.closingPrice
       """)
-  List<DashboardQueryDto> findChangedFavoriteIndexPerformance(
+  List<DashboardQueryDto> findFavoriteIndexPerformance(
       @Param("targetDate") LocalDate targetDate,
       @Param("deletedStatus") DeletedStatus deletedStatus
   );

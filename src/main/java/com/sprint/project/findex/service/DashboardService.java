@@ -34,7 +34,7 @@ public class DashboardService {
 
     LocalDate targetDate = calculateTargetDate(LocalDate.now(), periodType);
 
-    return dashboardRepository.findChangedFavoriteIndexPerformance(targetDate, DeletedStatus.ACTIVE)
+    return dashboardRepository.findFavoriteIndexPerformance(targetDate, DeletedStatus.ACTIVE)
         .stream()
         .map(DashboardMapper::toIndexPerformanceDto)
         .toList();
