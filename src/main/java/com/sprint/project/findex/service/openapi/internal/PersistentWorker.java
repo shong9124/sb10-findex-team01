@@ -1,7 +1,6 @@
 package com.sprint.project.findex.service.openapi.internal;
 
 import com.sprint.project.findex.dto.openapi.StockMarketIndexResponse.StockIndexDto;
-import com.sprint.project.findex.entity.DeletedStatus;
 import com.sprint.project.findex.entity.IndexData;
 import com.sprint.project.findex.entity.IndexInfo;
 import com.sprint.project.findex.entity.SourceType;
@@ -67,7 +66,6 @@ public class PersistentWorker {
             .baseIndex(dto.baseIndex())
             .sourceType(SourceType.OPEN_API)
             .favorite(false)
-            .isDeleted(DeletedStatus.ACTIVE)
             .build();
         toInsert.add(indexInfo);
         indexInfoMap.put(key, indexInfo);
