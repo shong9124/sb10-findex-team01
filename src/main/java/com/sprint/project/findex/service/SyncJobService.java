@@ -160,8 +160,6 @@ public class SyncJobService {
     while (!baseDate.isBefore(minimumDate)) {
       // api 요청 파라미터 설정
       StockMarketIndexRequest stockMarketIndexRequest = StockMarketIndexRequest.builder()
-          .pageNo(1)
-          .numOfRows(10)
           .baseDate(baseDate.format(DateTimeFormatter.BASIC_ISO_DATE))
           .build();
 
